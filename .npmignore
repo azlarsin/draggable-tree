@@ -1,0 +1,12 @@
+/.*
+
+/bower_components/
+
+/coverage/
+/demos/
+/test/
+
+
+src
+css
+demo

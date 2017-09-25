@@ -7,7 +7,9 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js --content-base examples/",
+    "build": "webpack && NODE_ENV=production webpack -p"
   },
   "author": "azlar",
   "license": "ISC",
@@ -20,5 +22,13 @@
     "style-loader": "^0.18.2",
     "webpack": "^3.6.0",
     "webpack-dev-server": "^2.8.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azlarsin/draggable-tree.git"
+  },
+  "bugs": {
+    "url": "https://github.com/azlarsin/draggable-tree/issues"
+  },
+  "homepage": "https://github.com/azlarsin/draggable-tree#readme"
 }
