@@ -10,9 +10,9 @@ A draggable tree by pure javascript.
 ## demo
 
 ## todo
-- [x] 逻辑编写、打包
-- [ ] 事件编写
+- [x] 主逻辑、打包
+- [ ] 事件逻辑
 - [ ] api
 - [ ] readme
-- [ ] 发布
 - [ ] demo
+- [ ] 发布到 npm
