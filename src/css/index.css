@@ -1,0 +1,58 @@
+
+.layers {
+    width: 500px;
+    background-color: rgba(111, 111, 111, .1);
+    opacity: 1;
+    transition: transform .3s;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 1px 0 1px rgba(0,0,0,.2);
+}
+
+.layers .layer {
+    position: relative;
+    clear: both;
+    overflow: hidden;
+    height: 50px;
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid rgba(0,0,0, .12);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+
+    padding: 0 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.layers .child-layers {
+    /*display: none;*/
+    box-sizing: border-box;
+    padding-left: 9px;
+    border-left: 2px solid transparent;
+    clear: both;
+    -webkit-transition: border-left-color .3s ease-out;
+    -o-transition: border-left-color .3s ease-out;
+    transition: border-left-color .3s ease-out;
+}
+
+.layers .layer.selected,
+.layers .layer.selected:hover {
+    background-color: rgba(0,0,255, .4);
+    opacity: 1;
+    text-decoration: none;
+    color: #fff;
+}
+
+.layers .layer:hover {
+    background-color: rgba(0,0,255, .2);
+}
+
+.layers .layer-box.over {
+    background-color: rgba(45,48,52,.3);
+}
+
+.layers .layer.show-top-line {
+    border-top: 1px solid #1E96FD;
+}
