@@ -115,10 +115,21 @@ const DraggableTree = (function () {
         this.dropTarget = null;
         this.selectedNodeId = null;
 
+        this.click = options.click;
+        this.drop = options.drop;
+        this.dragStart = options.dragStart;
+        this.dragOver = options.dragOver;
+        this.dragLeave = options.dragLeave;
+        this.dragEnd = options.dragEnd;
+        this.changed = options.changed;
+
         this.__renderDom();
 
 
         let self = this;
+
+
+        this.mountDom.classList.add("layers");
 
         this.mountDom.addEventListener('mousedown', function (e) {
             let layer = e.target,
@@ -136,6 +147,11 @@ const DraggableTree = (function () {
             layer.classList.add("selected");
 
             self.selectedNodeId = layerNodeId;
+
+            //cb
+            if(typeof self.click === 'function') {
+                self.click(self.selectedNodeId);
+            }
         });
 
         this.mountDom.addEventListener('dragstart', function (e) {
@@ -144,6 +160,11 @@ const DraggableTree = (function () {
             e.dataTransfer.effectAllowed = 'move';
 
             self.draggingNode = self.map.get(layer.getAttribute("data-id"));
+
+            //cb
+            if(typeof self.dragStart === 'function') {
+                self.dragStart(self.selectedNodeId);
+            }
         });
 
         this.mountDom.addEventListener('dragleave', function (e) {
@@ -156,6 +177,11 @@ const DraggableTree = (function () {
             if(self.dropTarget.id === layerNodeId) {
                 self.dropTarget = null;
             }
+
+            //cb
+            if(typeof self.dragLeave === 'function') {
+                self.dragLeave(self.selectedNodeId);
+            }
         });
 
         this.mountDom.addEventListener('drop', function (e) {
@@ -167,12 +193,15 @@ const DraggableTree = (function () {
                 self.__modifyTreeLevel(self.draggingNode, self.map.get(self.dropTarget.id), self.dropTarget.type);
             }
 
+            //cb
+            if(typeof self.drop === 'function') {
+                self.drop(self.selectedNodeId, self.dropTarget.id);
+            }
+
         }, false);
 
 
         this.mountDom.addEventListener("dragend", function(e) {
-            console.log("end", self.mountDom.querySelectorAll(".layer-box.over"));
-
             self.mountDom.querySelectorAll(".layer-box.over").forEach(dom => {
                 dom.classList.remove("over");
             });
@@ -180,6 +209,11 @@ const DraggableTree = (function () {
             self.mountDom.querySelectorAll(".layer.show-top-line").forEach(dom => {
                 dom.classList.remove("show-top-line");
             });
+
+            //cb
+            if(typeof self.dragEnd === 'function') {
+                self.dragEnd(self.selectedNodeId);
+            }
         }, false);
 
         this.mountDom.addEventListener("dragover", function(e) {
@@ -187,7 +221,6 @@ const DraggableTree = (function () {
 
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
-
 
             let rect = layer.getBoundingClientRect(),
                 mouse = e.clientY - rect.top;
@@ -212,6 +245,11 @@ const DraggableTree = (function () {
                     id: layerNodeId,
                     type: moveTypes.upon
                 }
+            }
+
+            //cb
+            if(typeof self.dragOver === 'function') {
+                self.dragOver(self.selectedNodeId, self.dropTarget.id, self.dropTarget.type);
             }
         }, false);
 
@@ -244,7 +282,11 @@ const DraggableTree = (function () {
             mountDom = this.mountDom;
         }
 
-        for(let id of list) {
+        // for (let [key, value] of Object.entries(myObject)){
+        //     console.log(key, value);
+        // }
+
+        for(let [, id] of Object.entries(list)) {
             let node = this.map.get(id);
 
             let layer = __createLayer(node);
@@ -326,11 +368,10 @@ const DraggableTree = (function () {
             targetDom.parentNode.parentNode.insertBefore(moveNodeBoxDom, targetDom.parentNode);
         }
 
-
-        sessionStorage.setItem("draggable-tree-data", JSON.stringify({
-            rootList: this.rootList,
-            map: Array.from(this.map.entries())
-        }));
+        //cb
+        if(typeof this.changed === 'function') {
+            this.changed('move node', moveNode.id, targetNode.id);
+        }
     };
 
     Tree.prototype.createNode = function (parentId = this.topParent, node = {}) {
@@ -395,7 +436,31 @@ const DraggableTree = (function () {
             let nodeDom = this.__getNodeDomById(id, "box");
             nodeDom.parentNode.removeChild(nodeDom);
 
+            //cb
+            if(typeof this.changed === 'function') {
+                this.changed('delete node', node.id);
+            }
+
         }
+    };
+
+    Tree.prototype.clear = function () {
+        this.rootList = [];
+        this.map = new Map();
+
+        return new Promise((resolve, reject) => {
+            try {
+                while (this.mountDom.hasChildNodes()) {
+                    this.mountDom.removeChild(this.mountDom.lastChild);
+                }
+
+                resolve();
+            }catch (e) {
+                consoleError("tree clear failed: ", e);
+
+                reject(e)
+            }
+        });
     };
 
     return {
@@ -412,6 +477,19 @@ const DraggableTree = (function () {
                 },
                 deleteNode: (id = null) => {
                     tree.deleteNode(id);
+                },
+
+                clear: () => {
+                    tree.clear();
+                },
+
+                render: (rootList, map) => {
+                    tree.clear().then(() => {
+
+                        tree.rootList = rootList;
+                        tree.map = map;
+                        tree.__renderDom();
+                    });
                 }
             };
         }

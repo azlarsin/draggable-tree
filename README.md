@@ -11,7 +11,7 @@ A draggable tree by pure javascript.
 
 ## todo
 - [x] 主逻辑、打包
-- [ ] 事件逻辑
+- [ ] 事件逻辑 (50%)
 - [ ] api
 - [ ] readme
 - [ ] demo

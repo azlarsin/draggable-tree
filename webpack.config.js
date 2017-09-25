@@ -14,7 +14,8 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, "lib"),
         filename: filename,
-        library: "DraggableTree"
+        library: "DraggableTree",
+        publicPath: '/lib',
     },
 
     module: {
