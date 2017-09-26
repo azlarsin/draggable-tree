@@ -11,26 +11,41 @@
             justify-content: center;
             align-items: center;
             min-height: 400px;
+            flex-wrap: wrap;
         }
+
+        body > div {
+            flex-basis: 30%;
+            margin: 10px .5% 0 1%;
+
+        }
+
+        body > div > .layers {
+            width: 100% !important;
+        }
+
     </style>
 </head>
 <body>
 
 <div>
-
-
+    <h3>when data changed, will save to sessionStorage:</h3>
     <div id="draggable-tree" class="layers">
 
     </div>
 
-    <button>
-        删除选中节点
-    </button>
+    <div class="actions">
+
+    </div>
 </div>
 
 <div>
-    <h3>get from session.storage:</h3>
+    <h3>get from sessionStorage:</h3>
     <div id="draggable-tree-1" class="layers">
+
+    </div>
+
+    <div class="actions">
 
     </div>
 </div>
@@ -38,6 +53,42 @@
 <div>
     <h3><span>5</span>s later, it will be reset with data from tree1</h3>
     <div id="draggable-tree-2" class="layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+
+
+<div>
+    <div class="draggable-tree layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+<div>
+    <div class="draggable-tree layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+<div>
+    <div class="draggable-tree layers">
+
+    </div>
+
+    <div class="actions">
 
     </div>
 </div>
