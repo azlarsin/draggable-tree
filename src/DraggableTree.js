@@ -41,11 +41,11 @@ const DraggableTree = (function () {
 
     //utils
     function guid() {
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-            s4() + '-' + s4() + s4() + s4();
+        return s4() + s4() + "-" + s4() + "-" + s4() + "-" +
+            s4() + "-" + s4() + s4() + s4();
     }
     function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000)
+        return Math.floor((1 + Math.random()) * 0x10000);
     }
 
     function consoleError(info) {
@@ -57,12 +57,10 @@ const DraggableTree = (function () {
             return arr;
         }
 
-        let targetIndex = arr.findIndex(v => {
-            return v === value;
-        });
+        let targetIndex = arr.findIndex((v) => v === value);
 
         if(targetIndex !== -1) {
-            arr.splice(targetIndex, 1)
+            arr.splice(targetIndex, 1);
         }
 
         return arr;
@@ -73,7 +71,7 @@ const DraggableTree = (function () {
             return arr;
         }
 
-        let targetIndex = arr.findIndex(v => {
+        let targetIndex = arr.findIndex((v) => {
             return v === target;
         });
 
@@ -91,7 +89,7 @@ const DraggableTree = (function () {
         layerBox.classList.add("layer-box");
 
         layerContent.classList.add("layer");
-        layerContent.style.height = layerHeight + 'px';
+        layerContent.style.height = layerHeight + "px";
         layerContent.setAttribute("draggable", "true");
         layerContent.setAttribute("data-id", node.id);
         layerContent.innerHTML = node.data || node.id;
@@ -131,7 +129,7 @@ const DraggableTree = (function () {
 
         //initial check
         if(!this.__check()) {
-            console.log('here');
+            console.log("here");
             return this;
         }
 
@@ -142,14 +140,14 @@ const DraggableTree = (function () {
         let self = this;
 
         // bind events for mountDom
-        this.mountDom.addEventListener('mousedown', function (e) {
+        this.mountDom.addEventListener("mousedown", function (e) {
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
 
             self.__selectNode(layerNodeId);
             if(layer.classList.contains("selected")) {
                 //cb
-                if(typeof self.click === 'function') {
+                if(typeof self.click === "function") {
                     self.click(e, layerNodeId);
                 }
 
@@ -166,16 +164,16 @@ const DraggableTree = (function () {
             layer.classList.add("selected");
 
             //cb
-            if(typeof self.click === 'function') {
+            if(typeof self.click === "function") {
                 self.click(layerNodeId);
             }
         });
 
-        this.mountDom.addEventListener('dragstart', function (e) {
+        this.mountDom.addEventListener("dragstart", function (e) {
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
 
-            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.effectAllowed = "move";
 
             self.draggingNode = self.map.get(layerNodeId);
 
@@ -190,12 +188,12 @@ const DraggableTree = (function () {
             }
 
             //cb
-            if(typeof self.dragStart === 'function') {
+            if(typeof self.dragStart === "function") {
                 self.dragStart(e, layerNodeId);
             }
         });
 
-        this.mountDom.addEventListener('dragleave', function (e) {
+        this.mountDom.addEventListener("dragleave", function (e) {
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
 
@@ -207,12 +205,12 @@ const DraggableTree = (function () {
             }
 
             //cb
-            if(typeof self.dragLeave === 'function') {
+            if(typeof self.dragLeave === "function") {
                 self.dragLeave(e, layerNodeId);
             }
         });
 
-        this.mountDom.addEventListener('drop', function (e) {
+        this.mountDom.addEventListener("drop", function (e) {
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
 
@@ -222,7 +220,7 @@ const DraggableTree = (function () {
             }
 
             //cb
-            if(typeof self.drop === 'function') {
+            if(typeof self.drop === "function") {
                 self.drop(e, self.draggingNode.id, self.dropTarget.id);
             }
 
@@ -239,7 +237,7 @@ const DraggableTree = (function () {
             });
 
             //cb
-            if(typeof self.dragEnd === 'function') {
+            if(typeof self.dragEnd === "function") {
                 self.dragEnd(e, self.draggingNode.id);
             }
         }, false);
@@ -276,7 +274,7 @@ const DraggableTree = (function () {
             }
 
             //cb
-            if(typeof self.dragOver === 'function') {
+            if(typeof self.dragOver === "function") {
                 self.dragOver(e, self.draggingNode.id, self.dropTarget.id, self.dropTarget.type);
             }
         }, false);
@@ -296,16 +294,16 @@ const DraggableTree = (function () {
                 break;
             }
             if(this.hasOwnProperty(i)) {
-                if(i === 'mountDom') {
+                if(i === "mountDom") {
                     passed = this[i] instanceof HTMLElement;
 
-                    info.expecting = 'HTMLElement or a selector';
+                    info.expecting = "HTMLElement or a selector";
                 }
 
                 if(["click", "drop", "dragStart", "dragOver", "dragLeave", "dragEnd", "changed"].indexOf(i) !== -1 && this[i] !== undefined) {
-                    passed = typeof this[i] === 'function';
+                    passed = typeof this[i] === "function";
 
-                    info.expecting = 'function';
+                    info.expecting = "function";
                 }
 
 
@@ -326,7 +324,7 @@ const DraggableTree = (function () {
 
     Tree.prototype.__getNodeDomById = function (id, specificTarget = null) {
         switch (specificTarget) {
-            case 'children':
+            case "children":
                 return this.mountDom.querySelector(`div[data-id="${id}"]`).nextElementSibling;
 
             case "box":
@@ -448,8 +446,8 @@ const DraggableTree = (function () {
         }
 
         //cb
-        if(typeof this.changed === 'function') {
-            this.changed('move node', moveNode.id, targetNode.id);
+        if(typeof this.changed === "function") {
+            this.changed("move node", moveNode.id, targetNode.id);
         }
     };
 
@@ -523,8 +521,8 @@ const DraggableTree = (function () {
             nodeDom.parentNode.removeChild(nodeDom);
 
             //cb
-            if(typeof this.changed === 'function') {
-                this.changed('delete node', node.id);
+            if(typeof this.changed === "function") {
+                this.changed("delete node", node.id);
             }
 
         }
@@ -628,18 +626,13 @@ const DraggableTree = (function () {
 
                     return this;
                 },
-                
+
                 remove: function () {
-                    
-                    tree.remove().then(() => {
-                        // console.log("all removed");
-                    });
-                    
+                    tree.remove().then(() => {});
                     return this;
                 },
 
                 toggleMultiSelect: function () {
-
                     if(tree.multiSelect) {
                         tree.clearSelected();
                     }
