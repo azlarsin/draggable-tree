@@ -56,3 +56,9 @@
 .layers .layer.show-top-line {
     border-top: 1px solid #1E96FD;
 }
+
+.layers > .layer-box.holder > .layer,
+.layers > .layer-box.holder > .layer:hover {
+    background-color: transparent;
+    border-bottom: none;
+}

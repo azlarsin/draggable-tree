@@ -80,6 +80,11 @@ const DraggableTree = (function () {
         return arr;
     }
 
+    // check type
+    function is(v, type) {
+        let t = Object.prototype.toString.call(v).split(' ')[1].slice(0, -1);
+        return !type ? t : t.toLowerCase() === type.toLowerCase();
+    }
 
     function __createLayer(node) {
         let layerBox = document.createElement("div"),
@@ -102,40 +107,77 @@ const DraggableTree = (function () {
         return layerBox;
     }
 
+    function __checkOptions(options) {
+        let passed = true,
+            info = {
+                key: null,
+                expecting: null,
+                received: null
+            };
+
+        options.mountDom = options.mountDom instanceof HTMLElement ? options.mountDom : document.querySelector(options.mountDom);
+
+        for(let i in options) {
+            if(passed === false) {
+                break;
+            }
+            if(options.hasOwnProperty(i)) {
+                if(i === "mountDom") {
+                    passed = options[i] instanceof HTMLElement;
+
+                    info.expecting = "HTMLElement or a selector";
+                }
+
+                if(["click", "drop", "dragStart", "dragOver", "dragLeave", "dragEnd", "changed"].indexOf(i) !== -1 && options[i] !== undefined) {
+                    passed = typeof options[i] === "function";
+
+                    info.expecting = "Function";
+                }
+
+                if(i === 'list' || i === 'rootList') {
+                    passed = is(options[i], 'array');
+
+                    info.expecting = 'Array';
+                }
+
+                if(i === 'map') {
+                    passed = is(options[i], 'map');
+
+                    info.expecting = 'Map';
+                }
+
+                if(i === 'multiSelect') {
+                    passed = is(options[i], 'boolean');
+
+                    info.expecting = 'Boolean';
+                }
+
+                if(!passed) {
+                    info.key = i;
+                    info.received = typeof options[i];
+                }
+            }
+        }
+
+        if(!passed) {
+            consoleError(`invalid option: ${info.key}, expecting ${info.expecting}, received ${info.received}`);
+        }
+
+        return passed;
+    }
+
     // main
     function Tree(options) {
+        // initial
+        this.init(options);
 
-        // options
-        this.id = "draggable-tree-" + guid();
-        this.mountDom = options.mountDom instanceof HTMLElement ? options.mountDom : document.querySelector(options.mountDom);
-        this.rootList = options.list || options.rootList || [];
-        this.map = options.map instanceof Map ? new Map(options.map) : new Map();
-        this.multiSelect = options.multiSelect || false;
-
-        // events
-        this.click = options.click;
-        this.drop = options.drop;
-        this.dragStart = options.dragStart;
-        this.dragOver = options.dragOver;
-        this.dragLeave = options.dragLeave;
-        this.dragEnd = options.dragEnd;
-        this.changed = options.changed;
-
-        // private
-        this.topParent = "Root";
-        this.draggingNode = null;
-        this.dropTarget = null;
-        this.selectingIdSet = new Set();
-
-        //initial check
+        // initial check after defined property
         if(!this.__check()) {
-            console.log("here");
             return this;
         }
 
         this.mountDom.classList.add("layers");
-        this.__renderDom();
-
+        this.render();
 
         let self = this;
 
@@ -144,9 +186,13 @@ const DraggableTree = (function () {
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
 
+            if(!layerNodeId) {
+                return ;
+            }
+
             self.__selectNode(layerNodeId);
             if(layer.classList.contains("selected")) {
-                //cb
+                // cb
                 if(typeof self.click === "function") {
                     self.click(e, layerNodeId);
                 }
@@ -163,7 +209,7 @@ const DraggableTree = (function () {
 
             layer.classList.add("selected");
 
-            //cb
+            // cb
             if(typeof self.click === "function") {
                 self.click(layerNodeId);
             }
@@ -187,7 +233,7 @@ const DraggableTree = (function () {
                 });
             }
 
-            //cb
+            // cb
             if(typeof self.dragStart === "function") {
                 self.dragStart(e, layerNodeId);
             }
@@ -204,7 +250,7 @@ const DraggableTree = (function () {
                 self.dropTarget = null;
             }
 
-            //cb
+            // cb
             if(typeof self.dragLeave === "function") {
                 self.dragLeave(e, layerNodeId);
             }
@@ -214,12 +260,12 @@ const DraggableTree = (function () {
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
 
-            //be ware for multiple trees were created
+            // be ware for multiple trees were created; if target is holder, null === null
             if(self.dropTarget.id === layerNodeId && self.draggingNode) {
                 self.__modifyTreeLevel(self.draggingNode, self.map.get(self.dropTarget.id), self.dropTarget.type);
             }
 
-            //cb
+            // cb
             if(typeof self.drop === "function") {
                 self.drop(e, self.draggingNode.id, self.dropTarget.id);
             }
@@ -236,7 +282,7 @@ const DraggableTree = (function () {
                 dom.classList.remove("show-top-line");
             });
 
-            //cb
+            // cb
             if(typeof self.dragEnd === "function") {
                 self.dragEnd(e, self.draggingNode.id);
             }
@@ -251,8 +297,8 @@ const DraggableTree = (function () {
             let rect = layer.getBoundingClientRect(),
                 mouse = e.clientY - rect.top;
 
-
-            if(mouse > layerHeight / 3 && mouse <= layerHeight) {
+            // holder only has top line
+            if(layerNodeId && mouse > layerHeight / 3 && mouse <= layerHeight) {
                 // layer show over
 
                 layer.parentNode.classList.add("over");
@@ -273,13 +319,39 @@ const DraggableTree = (function () {
                 }
             }
 
-            //cb
+            // cb
             if(typeof self.dragOver === "function") {
                 self.dragOver(e, self.draggingNode.id, self.dropTarget.id, self.dropTarget.type);
             }
         }, false);
 
     }
+
+    Tree.prototype.init = function (options) {
+        // options
+        this.id = "draggable-tree-" + guid();
+        this.mountDom = options.mountDom instanceof HTMLElement ? options.mountDom : document.querySelector(options.mountDom);
+        this.rootList = options.list || options.rootList || [];
+        this.map = options.map instanceof Map ? new Map(options.map) : new Map();
+        this.multiSelect = options.multiSelect || false;
+
+        // events
+        this.click = options.click;
+        this.dragStart = options.dragStart;
+        this.dragOver = options.dragOver;
+        this.dragLeave = options.dragLeave;
+        this.dragEnd = options.dragEnd;
+        this.drop = options.drop;
+        this.changed = options.changed;
+
+        // private
+        this.topParent = "Root";
+        this.draggingNode = null;
+        this.dropTarget = null;
+        this.selectingIdSet = new Set();
+        this.hasHolder = false;
+
+    };
 
     Tree.prototype.__check = function () {
         let passed = true,
@@ -306,7 +378,6 @@ const DraggableTree = (function () {
                     info.expecting = "function";
                 }
 
-
                 if(!passed) {
                     info.key = i;
                     info.received = typeof this[i];
@@ -330,6 +401,9 @@ const DraggableTree = (function () {
             case "box":
                 return this.mountDom.querySelector(`div[data-id="${id}"]`).parentNode;
 
+            case "holder-box":
+                return this.mountDom.querySelector('.layer-box.holder');
+
             default:
                 return this.mountDom.querySelector(`div[data-id="${id}"]`);
         }
@@ -347,19 +421,25 @@ const DraggableTree = (function () {
     Tree.prototype.__createDom = function (node, targetNode) {
         let layer = __createLayer(node);
 
-        let targetDom = targetNode ? this.__getNodeDomById(targetNode.id, "children") : this.mountDom;
+        if(!targetNode) {
+            let holder = this.__getNodeDomById(null, 'holder-box');
 
-        targetDom.appendChild(layer);
+            this.mountDom.insertBefore(layer, holder);
+        }else {
+            let targetDom = this.__getNodeDomById(targetNode.id, "children");
+
+            targetDom.appendChild(layer);
+        }
+
+        if(!this.hasHolder) {
+            this.__renderHolderLayer();
+        }
     };
 
     Tree.prototype.__renderDom = function (list = this.rootList, mountDom = this.mountDom) {
         if(!mountDom) {
             mountDom = this.mountDom;
         }
-
-        // for (let [key, value] of Object.entries(myObject)){
-        //     console.log(key, value);
-        // }
 
         for(let [, id] of Object.entries(list)) {
             let node = this.map.get(id);
@@ -371,8 +451,25 @@ const DraggableTree = (function () {
                 this.__renderDom(node.children, this.__getNodeDomById(node.id, "children"));
             }
         }
+    };
 
-        let holderLayer = __createLayer();
+    Tree.prototype.__renderHolderLayer = function () {
+        if(this.hasHolder) {
+            return ;
+        }
+
+        let holderLayer = document.createElement('div'),
+            layerContent = document.createElement('div');
+
+        holderLayer.classList.add('layer-box', 'holder');
+
+        layerContent.classList.add("layer");
+        layerContent.style.height = layerHeight + "px";
+
+        holderLayer.appendChild(layerContent);
+        this.mountDom.appendChild(holderLayer);
+
+        this.hasHolder = true;
     };
 
     Tree.prototype.__getNodeById = function (id) {
@@ -380,74 +477,77 @@ const DraggableTree = (function () {
     };
 
     Tree.prototype.__modifyTreeLevel = function (moveNode, targetNode, moveType) {
-        let moveNodeParentNode = moveNode.parentId === this.topParent ? null : this.map.get(moveNode.parentId),
-            targetNodeParentNode = targetNode.parentId === this.topParent ? null : this.map.get(targetNode.parentId);
+        if(!targetNode) {
+            console.log('to-last');
 
-        let moveNodeBoxDom = this.__getNodeDomById(moveNode.id, "box"),
-            targetDom = this.__getNodeDomById(targetNode.id);
+            let moveNodeParentNode = moveNode.parentId === this.topParent ? null : this.map.get(moveNode.parentId),
+                moveNodeBoxDom = this.__getNodeDomById(moveNode.id, "box"),
+                targetNodeDom = this.__getNodeDomById(null, "holder-box");
 
-        if(!moveNodeBoxDom || !targetDom) {
-            consoleError("invalid editing dom");
-        }
+            deleteByValueFromArray(moveNode.id, moveNodeParentNode ? moveNodeParentNode.children : this.rootList);
 
-        if(moveNodeBoxDom.contains(targetDom)) {
-            consoleError("you are moving a dom into it's child node");
-            return ;
-        }
-
-        if(moveType === moveTypes.in) {
-            // data
-            if(moveNodeParentNode) {
-                // moveNodeParentNode.children.deleteByValue(moveNode.id);
-
-                deleteByValueFromArray(moveNode.id, moveNodeParentNode.children);
-
-            }else {
-                // this.rootList.deleteByValue(moveNode.id);
-
-                deleteByValueFromArray(moveNode.id, this.rootList);
-            }
-
-            moveNode.parentId = targetNode.id;
-
-            targetNode.children = targetNode.children.concat([moveNode.id]);
+            moveNode.parentId = 'Root';
+            this.rootList.push(moveNode.id);
 
             // dom
-            targetDom.nextElementSibling.appendChild(moveNodeBoxDom);
-        }
+            this.mountDom.insertBefore(moveNodeBoxDom, targetNodeDom);
+        }else {
+            let moveNodeParentNode = moveNode.parentId === this.topParent ? null : this.map.get(moveNode.parentId),
+                targetNodeParentNode = targetNode.parentId === this.topParent ? null : this.map.get(targetNode.parentId);
 
-        if(moveType === moveTypes.upon) {
-            // data
-            if(moveNode.parentId !== targetNode.parentId && moveNodeParentNode) {
-                // moveNodeParentNode.children.deleteByValue(moveNode.id);
+            let moveNodeBoxDom = this.__getNodeDomById(moveNode.id, "box"),
+                targetDom = this.__getNodeDomById(targetNode.id);
 
-                deleteByValueFromArray(moveNode.id, moveNodeParentNode.children);
-            }else {
-                // this.rootList.deleteByValue(moveNode.id);
-
-                deleteByValueFromArray(moveNode.id, this.rootList);
+            if(!moveNodeBoxDom || !targetDom) {
+                consoleError("invalid editing dom");
             }
 
-            moveNode.parentId = targetNode.parentId;
-
-            if(targetNodeParentNode) {
-                // targetNodeParentNode.children.insertBeforeValue(targetNode.id, moveNode.id);
-
-                insertToArrayBeforeValue(targetNode.id, moveNode.id, targetNodeParentNode.children);
-
-            }else {
-                // this.rootList.insertBeforeValue(targetNode.id, moveNode.id);
-
-                insertToArrayBeforeValue(targetNode.id, moveNode.id, this.rootList);
+            if(moveNodeBoxDom.contains(targetDom)) {
+                consoleError("you are moving a dom into it's child node");
+                return ;
             }
 
-            // dom
-            targetDom.parentNode.parentNode.insertBefore(moveNodeBoxDom, targetDom.parentNode);
+            if(moveType === moveTypes.in) {
+                // data
+                deleteByValueFromArray(moveNode.id, moveNodeParentNode ? moveNodeParentNode.children : this.rootList);
+
+                moveNode.parentId = targetNode.id;
+
+                targetNode.children = targetNode.children.concat([moveNode.id]);
+
+                // dom
+                targetDom.nextElementSibling.appendChild(moveNodeBoxDom);
+            }
+
+            if(moveType === moveTypes.upon) {
+                // data
+                if(moveNode.parentId !== targetNode.parentId && moveNodeParentNode) {
+                    // moveNodeParentNode.children.deleteByValue(moveNode.id);
+
+                    deleteByValueFromArray(moveNode.id, moveNodeParentNode.children);
+                }else {
+                    // this.rootList.deleteByValue(moveNode.id);
+
+                    deleteByValueFromArray(moveNode.id, this.rootList);
+                }
+
+                moveNode.parentId = targetNode.parentId;
+
+                if(targetNodeParentNode) {
+                    insertToArrayBeforeValue(targetNode.id, moveNode.id, targetNodeParentNode.children);
+                }else {
+                    // this.rootList.insertBeforeValue(targetNode.id, moveNode.id);
+                    insertToArrayBeforeValue(targetNode.id, moveNode.id, this.rootList);
+                }
+
+                // dom
+                targetDom.parentNode.parentNode.insertBefore(moveNodeBoxDom, targetDom.parentNode);
+            }
         }
 
-        //cb
+        // cb
         if(typeof this.changed === "function") {
-            this.changed("move node", moveNode.id, targetNode.id);
+            this.changed("move node", moveNode.id, targetNode ? targetNode.id : 'holder');
         }
     };
 
@@ -483,17 +583,24 @@ const DraggableTree = (function () {
         this.map.set(nodeId, node);
 
         this.__createDom(node, targetNode);
+
+        // cb
+        if(typeof this.changed === "function") {
+            this.changed("create node", node.id);
+        }
     };
 
-    Tree.prototype.deleteNode = function (id) {
+    Tree.prototype.deleteNode = function (id = null) {
 
+        // deleting selected nodes
         if(!id && this.selectingIdSet.size > 0) {
             // delete all selecting node
-            this.selectingIdSet.forEach(this.deleteNode);
+            this.selectingIdSet.forEach(id => {
+                this.deleteNode(id);
+            });
 
             return ;
         }
-
 
         let node = this.__getNodeById(id);
 
@@ -507,82 +614,89 @@ const DraggableTree = (function () {
                 parentList = parentNode ? parentNode.children : null;
             }
 
+            if(node.children.length > 0) {
+                for (let id of node.children) {
+                    this.deleteNode(id);
+                }
+            }
+
             if(!parentList) {
                 consoleError("parent node not found");
+            }else {
 
-                return ;
+                deleteByValueFromArray(id, parentList);
+                this.map.delete(id);
+
+                //dom
+                let nodeDom = this.__getNodeDomById(id, "box");
+                nodeDom.parentNode.removeChild(nodeDom);
             }
-
-            deleteByValueFromArray(id, parentList);
-            this.map.delete(id);
-
-            //dom
-            let nodeDom = this.__getNodeDomById(id, "box");
-            nodeDom.parentNode.removeChild(nodeDom);
-
-            //cb
-            if(typeof this.changed === "function") {
-                this.changed("delete node", node.id);
-            }
-
         }
     };
 
     Tree.prototype.remove = function () {
-        if(this.selectingIdSet.size > 0) {
+        // if(this.selectingIdSet.size > 0) {
+        let promises = [];
 
-            let promises = [];
+        this.selectingIdSet.forEach(id => {
+            promises.push(
+                new Promise((resolve, reject) => {
+                    try {
 
-            this.selectingIdSet.forEach(id => {
-                promises.push(
-                    new Promise((resolve, reject) => {
-                        try {
+                        this.deleteNode(id);
 
-                            let node = this.map.get(id),
-                                nodeDom = this.__getNodeDomById(id);
+                        // let node = this.map.get(id),
+                        //     nodeDom = this.__getNodeDomById(id);
+                        //
+                        // if(nodeDom) {
+                        //     nodeDom.parentNode.removeChild(nodeDom);
+                        // }
+                        //
+                        // if(node) {
+                        //     if(node.parentId === this.topParent) {
+                        //         deleteByValueFromArray(node.id, this.rootList);
+                        //     }else {
+                        //         let parentNode = this.map.get(node.parentId);
+                        //         deleteByValueFromArray(node.id, parentNode.children);
+                        //     }
+                        //     this.map.delete(id);
+                        // }
+                        //
+                        // // cb
+                        // if(typeof this.changed === "function") {
+                        //     this.changed("delete node", node.id);
+                        // }
 
-                            if(nodeDom) {
-                                nodeDom.parentNode.removeChild(nodeDom);
-                            }
+                        resolve(id);
+                    }catch (e) {
+                        reject(e);
+                    }
+                }).then(() => {
+                    this.selectingIdSet.delete(id);
+                })
+            );
+        });
 
-                            if(node) {
-                                if(node.parentId === this.topParent) {
-                                    deleteByValueFromArray(node.id, this.rootList);
-                                }else {
-                                    let parentNode = this.map.get(node.parentId);
-                                    deleteByValueFromArray(node.id, parentNode.children);
-                                }
-                                this.map.delete(id);
-                            }
-                            resolve();
-                        }catch (e) {
-                            reject(e);
-                        }
-                    }).then(() => {
-                        this.selectingIdSet.delete(id);
-                    })
-                );
-            });
-
-            return Promise.all(promises);
-        }
+        return Promise.all(promises);
+        // }
     };
 
     Tree.prototype.clearSelected = function () {
-        this.selectingIdSet.forEach(id => {
+        for(let id of this.selectingIdSet) {
             let layerDom = this.__getNodeDomById(id);
 
             if(layerDom) {
                 layerDom.classList.remove("selected");
             }
+        }
 
-            this.selectingIdSet.clear();
-        });
+        this.selectingIdSet.clear();
     };
 
     Tree.prototype.removeAll = function () {
         this.rootList = [];
         this.map = new Map();
+        this.hasHolder = false;
 
         return new Promise((resolve, reject) => {
             try {
@@ -599,17 +713,40 @@ const DraggableTree = (function () {
         });
     };
 
+    Tree.prototype.render = function (list, map) {
+        this.__renderDom();
+        setTimeout(() => {
+            this.__renderHolderLayer();
+        }, 1);
+    };
+
+    Tree.prototype.updateOptions = function (options) {
+        // options
+        this.multiSelect = typeof options.multiSelect === 'boolean' ? options.multiSelect : this.multiSelect;
+
+        // events
+        this.click = typeof options.click === 'function' ? options.click : this.click;
+        this.dragStart = typeof options.dragStart === 'function' ? options.dragStart : this.dragStart;
+        this.dragOver = typeof options.dragOver === 'function' ? options.dragOver : this.dragOver;
+        this.dragLeave = typeof options.dragLeave === 'function' ? options.dragLeave : this.dragLeave;
+        this.dragEnd = typeof options.dragEnd === 'function' ? options.dragEnd : this.dragEnd;
+        this.drop = typeof options.drop === 'function' ? options.drop : this.drop;
+        this.changed = typeof options.changed === 'function' ? options.changed : this.changed;
+    };
+
     return {
         create: options => {
             let tree;
             tree = new Tree(options);
 
+            let operator = {
+                getRootList: function() {
+                    return tree.rootList
+                },
 
-            trees.set(tree.id, tree);
-
-            return {
-                rootList: tree.rootList,
-                map: tree.map,
+                getMap: function () {
+                    return tree.map
+                },
                 createNode: function(parentId = tree.topParent, node = {}) {
                     tree.createNode(parentId, node);
 
@@ -622,16 +759,37 @@ const DraggableTree = (function () {
                 },
 
                 removeAll: function() {
-                    tree.removeAll();
+                    tree.removeAll().then(() => {
+                        if(typeof tree.changed === "function") {
+
+                            console.log(tree);
+
+                            tree.changed("empty nodes");
+                        }
+                    });
 
                     return this;
                 },
 
                 remove: function () {
-                    tree.remove().then(() => {});
+                    let selectedNodeIds = Array.from(tree.selectingIdSet.values());
+
+                    tree.remove().then(() => {
+                        // cb
+                        if(typeof tree.changed === "function") {
+                            tree.changed("delete node", selectedNodeIds);
+                        }
+                    });
+                    // tree.deleteNode();
+
                     return this;
                 },
 
+                clearSelected: function() {
+                    tree.clearSelected();
+
+                    return this;
+                },
                 toggleMultiSelect: function () {
                     if(tree.multiSelect) {
                         tree.clearSelected();
@@ -643,23 +801,40 @@ const DraggableTree = (function () {
 
                 render: function(rootList, map) {
                     tree.removeAll().then(() => {
+                        tree.rootList = rootList instanceof Array ? rootList : [];
+                        tree.map = map instanceof Map ? new Map(map) : new Map();
 
-                        tree.rootList = rootList;
-                        tree.map = map;
-                        tree.__renderDom();
+                        if(tree.map.size > 0) {
+                            tree.render(rootList, map);
+                        }
                     });
 
                     return this;
                 },
 
                 setOptions: function (options) {
+                    tree.updateOptions(options);
 
+                    if(!tree.__check()) {
+                        return this;
+                    }
+
+                    return this;
                 }
             };
+
+            trees.set(tree.id, {
+                tree,
+                operator
+            });
+
+            return operator;
         },
 
         getTrees: function () {
-            return Array.from(trees.values());
+            return Array.from(trees.values()).map(tree => {
+                return tree.operator;
+            });
         }
     }
 }());

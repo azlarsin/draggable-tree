@@ -11,9 +11,9 @@ A draggable tree by pure javascript.
 
 ## todo
 - [x] 主逻辑、打包
-- [ ] 事件逻辑 (50%)，目前在考虑要不要支持多事件绑定
-- [ ] last holder 逻辑，会增添一些判断
+- [x] 事件逻辑 (50%)，目前在考虑要不要支持多事件绑定(咱不支持)
+- [x] last holder 逻辑，会增添一些判断
 - [ ] api
 - [ ] readme
-- [ ] demo
+- [ ] demo(50%)
 - [ ] 发布到 npm
