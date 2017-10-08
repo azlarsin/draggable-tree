@@ -81,14 +81,15 @@
     let trees = DraggableTree.getTrees(),
         containers = document.querySelectorAll("body > div > .actions"),
         actions = {
-            "createNode": "add node to rootList",
+            "createNode": "add a node to rootList",
             "removeAll": "empty tree",
             "clearSelected": "clear selected",
             "remove": "remove selected nodes",
             "toggleMultiSelect": "toggle multi-select option"
         };
 
-    trees[0].setOptions({
+    // reset tree0.event
+    trees[0].setEvents({
         changed: function (actionType) {
             console.log(actionType);
             sessionStorage.setItem("draggable-tree-data", JSON.stringify({
@@ -108,6 +109,23 @@
 
     containers.forEach((actionDom, index) => {
         let tree = trees[index];
+
+        let button = document.createElement("button");
+        button.innerText = 'add a child node to selecting node';
+        button.addEventListener("click", function () {
+            let layers = this.parentNode.parentNode.querySelector('.layers');
+
+            let selectedLayers = layers.querySelectorAll('.layer.selected');
+
+            if(selectedLayers.length === 1) {
+                let id = selectedLayers[0].getAttribute('data-id');
+                tree.createNode(id);
+            }else {
+                console.warn('error selected node')
+            }
+        });
+
+        actionDom.appendChild(button);
 
         for(let functionName of Object.keys(actions)) {
 

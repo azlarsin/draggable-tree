@@ -812,7 +812,7 @@ const DraggableTree = (function () {
                     return this;
                 },
 
-                setOptions: function (options) {
+                setEvents: function (options) {
                     tree.updateOptions(options);
 
                     if(!tree.__check()) {
