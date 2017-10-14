@@ -17,7 +17,7 @@ A draggable tree by pure javascript.
 - [ ] readme
 - [x] demo(80%)
 - [x] 发布到 npm
-- [] 逻辑优化，给同事用后感觉有些 api 不完善；例如：drop 前没有 before drop 用于阻止 drop 操作带来的数据变化（有时候需要与后台交互，获得成功答复后才可继续操作）
+- [ ] 逻辑优化，给同事用后感觉有些 api 不完善；例如：drop 前没有 before drop 用于阻止 drop 操作带来的数据变化（有时候需要与后台交互，获得成功答复后才可继续操作）
 
 ## bug fixes
 - [x] firefox 不可拖拽
