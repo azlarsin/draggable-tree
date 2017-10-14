@@ -1,6 +1,6 @@
 {
   "name": "draggable-tree",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A draggable tree by pure javascript.",
   "main": "index.js",
   "directories": {
@@ -31,5 +31,6 @@
   "bugs": {
     "url": "https://github.com/azlarsin/draggable-tree/issues"
   },
-  "homepage": "https://github.com/azlarsin/draggable-tree#readme"
+  "homepage": "https://github.com/azlarsin/draggable-tree#readme",
+  "dependencies": {}
 }
