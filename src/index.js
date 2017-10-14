@@ -6,4 +6,4 @@
 
 require("./css/index.css");
 
-module.exports =  require("./DraggableTree").default;
+module.exports = require("./DraggableTree").default;

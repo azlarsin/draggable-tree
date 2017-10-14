@@ -221,6 +221,8 @@ const DraggableTree = (function () {
 
             e.dataTransfer.effectAllowed = "move";
 
+            e.dataTransfer.setData('text/html', null); // for firefox dragging issue;when set data to 'text/html', it will prevent jumping to another page
+
             self.draggingNode = self.map.get(layerNodeId);
 
             self.__selectNode(layerNodeId);  // set again
@@ -260,16 +262,42 @@ const DraggableTree = (function () {
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
 
-            // be ware for multiple trees were created; if target is holder, null === null
-            if(self.dropTarget.id === layerNodeId && self.draggingNode) {
-                self.__modifyTreeLevel(self.draggingNode, self.map.get(self.dropTarget.id), self.dropTarget.type);
+            // node.data maybe html
+            if(layerNodeId === null) {
+                layer = layer.closest(".layer");
+
+                layerNodeId = layer.getAttribute("data-id");
             }
 
-            // cb
-            if(typeof self.drop === "function") {
-                self.drop(e, self.draggingNode.id, self.dropTarget.id);
-            }
+            if(typeof self.beforeDrop === "function") {
+                self.beforeDrop(self.draggingNode.id, self.dropTarget.id, self.dropTarget.type).then(() => {
 
+
+
+                    // be ware for multiple trees were created; if target is holder, null === null
+                    if(self.dropTarget.id === layerNodeId && self.draggingNode) {
+                        self.__modifyTreeLevel(self.draggingNode, self.map.get(self.dropTarget.id), self.dropTarget.type);
+                    }
+
+                    // cb
+                    if(typeof self.drop === "function") {
+                        self.drop(self.draggingNode.id, self.dropTarget.id, self.dropTarget.type);
+                    }
+                });
+
+            }else {
+
+
+                // be ware for multiple trees were created; if target is holder, null === null
+                if(self.dropTarget.id === layerNodeId && self.draggingNode) {
+                    self.__modifyTreeLevel(self.draggingNode, self.map.get(self.dropTarget.id), self.dropTarget.type);
+                }
+
+                // cb
+                if(typeof self.drop === "function") {
+                    self.drop(self.draggingNode.id, self.dropTarget.id, self.dropTarget.type);
+                }
+            }
         }, false);
 
 
@@ -293,6 +321,13 @@ const DraggableTree = (function () {
 
             let layer = e.target,
                 layerNodeId = layer.getAttribute("data-id");
+
+            // node.data maybe html
+            if(layerNodeId === null) {
+                layer = layer.closest(".layer");
+
+                layerNodeId = layer.getAttribute("data-id");
+            }
 
             let rect = layer.getBoundingClientRect(),
                 mouse = e.clientY - rect.top;
@@ -343,6 +378,7 @@ const DraggableTree = (function () {
         this.dragEnd = options.dragEnd;
         this.drop = options.drop;
         this.changed = options.changed;
+        this.beforeDrop = options.beforeDrop;
 
         // private
         this.topParent = "Root";
@@ -372,11 +408,17 @@ const DraggableTree = (function () {
                     info.expecting = "HTMLElement or a selector";
                 }
 
-                if(["click", "drop", "dragStart", "dragOver", "dragLeave", "dragEnd", "changed"].indexOf(i) !== -1 && this[i] !== undefined) {
+                if(["click", "drop", "dragStart", "dragOver", "dragLeave", "dragEnd", "changed", "beforeDrop"].indexOf(i) !== -1 && this[i] !== undefined) {
                     passed = typeof this[i] === "function";
 
                     info.expecting = "function";
                 }
+
+                // if(i === "beforeDrop") {
+                //     passed = this[i] instanceof Promise;
+                //
+                //     info.expecting = "promise";
+                // }
 
                 if(!passed) {
                     info.key = i;
@@ -547,7 +589,7 @@ const DraggableTree = (function () {
 
         // cb
         if(typeof this.changed === "function") {
-            this.changed("move node", moveNode.id, targetNode ? targetNode.id : 'holder');
+            this.changed("move node", moveNode.id, targetNode ? targetNode.id : 'holder', moveType);
         }
     };
 
@@ -644,29 +686,6 @@ const DraggableTree = (function () {
                     try {
 
                         this.deleteNode(id);
-
-                        // let node = this.map.get(id),
-                        //     nodeDom = this.__getNodeDomById(id);
-                        //
-                        // if(nodeDom) {
-                        //     nodeDom.parentNode.removeChild(nodeDom);
-                        // }
-                        //
-                        // if(node) {
-                        //     if(node.parentId === this.topParent) {
-                        //         deleteByValueFromArray(node.id, this.rootList);
-                        //     }else {
-                        //         let parentNode = this.map.get(node.parentId);
-                        //         deleteByValueFromArray(node.id, parentNode.children);
-                        //     }
-                        //     this.map.delete(id);
-                        // }
-                        //
-                        // // cb
-                        // if(typeof this.changed === "function") {
-                        //     this.changed("delete node", node.id);
-                        // }
-
                         resolve(id);
                     }catch (e) {
                         reject(e);
@@ -732,6 +751,8 @@ const DraggableTree = (function () {
         this.dragEnd = typeof options.dragEnd === 'function' ? options.dragEnd : this.dragEnd;
         this.drop = typeof options.drop === 'function' ? options.drop : this.drop;
         this.changed = typeof options.changed === 'function' ? options.changed : this.changed;
+        this.beforeDrop = typeof options.beforeDrop === 'function' ? options.beforeDrop : this.beforeDrop;
+
     };
 
     return {
@@ -747,6 +768,7 @@ const DraggableTree = (function () {
                 getMap: function () {
                     return tree.map
                 },
+
                 createNode: function(parentId = tree.topParent, node = {}) {
                     tree.createNode(parentId, node);
 
@@ -762,7 +784,7 @@ const DraggableTree = (function () {
                     tree.removeAll().then(() => {
                         if(typeof tree.changed === "function") {
 
-                            console.log(tree);
+                            // console.log(tree);
 
                             tree.changed("empty nodes");
                         }

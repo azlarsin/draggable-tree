@@ -25,7 +25,7 @@
 
     tree.createNode(tree.getRootList()[0]);
     tree.createNode(tree.getMap().get(tree.getRootList()[0]).children[0], {
-        // data: "<div class='test'>12345</div>"
+        data: "<div class='test'>12345</div>"
     });
 
     // tree1
@@ -123,6 +123,9 @@
             }else {
                 console.warn('error selected node')
             }
+
+            // window.scrollTo(0, document.body.scrollHeight);
+
         });
 
         actionDom.appendChild(button);

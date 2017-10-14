@@ -1,6 +1,6 @@
 {
   "name": "draggable-tree",
-  "version": "0.0.1",
+  "version": "0.0.6",
   "description": "A draggable tree by pure javascript.",
   "main": "index.js",
   "directories": {
