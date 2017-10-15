@@ -7,7 +7,18 @@ A draggable tree by pure javascript.
 ## Api
 
 
-## demo
+
+## Demo
+[https://blog.azlar.cc/demos/draggable-tree/](https://blog.azlar.cc/demos/draggable-tree/).
+
+or
+
+```javascript
+git clone git@github.com:azlarsin/draggable-tree.git
+cd draggable-tree
+npm install
+npm start
+```
 
 ## todo
 - [x] 主逻辑、打包
