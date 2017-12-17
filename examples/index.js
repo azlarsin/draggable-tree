@@ -85,6 +85,7 @@
             "removeAll": "empty tree",
             "clearSelected": "clear selected",
             "remove": "remove selected nodes",
+            "toggleMultiSelect": "toggle multi-select option",
             "toggleMultiSelect": "toggle multi-select option"
         };
 

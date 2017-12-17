@@ -101,6 +101,11 @@ const DraggableTree = (function () {
 
         childLayers.classList.add("child-layers");
 
+
+        if(node.collapsed) {
+            layerBox.classList.add("collapsed");
+        }
+
         layerBox.appendChild(layerContent);
         layerBox.appendChild(childLayers);
 
@@ -164,6 +169,15 @@ const DraggableTree = (function () {
         }
 
         return passed;
+    }
+
+    // node
+    function Node(attributes) {
+        this.id = attributes.id;
+        this.parentId = attributes.parentId;
+        this.children = attributes.children || [];
+
+        this.collapsed = attributes.collapsed || true;
     }
 
     // main
@@ -618,17 +632,19 @@ const DraggableTree = (function () {
             targetNode.children.push(nodeId);
         }
 
-        node.id = nodeId;
-        node.parentId = parentId;
-        node.children = node.children || [];
+        let newNode = new Node({
+            id: nodeId,
+            parentId: parentId,
+            children: node.children
+        });
 
-        this.map.set(nodeId, node);
+        this.map.set(nodeId, newNode);
 
-        this.__createDom(node, targetNode);
+        this.__createDom(newNode, targetNode);
 
         // cb
         if(typeof this.changed === "function") {
-            this.changed("create node", node.id);
+            this.changed("create node", newNode.id);
         }
     };
 
@@ -755,6 +771,47 @@ const DraggableTree = (function () {
 
     };
 
+    Tree.prototype.toggleCollapse = function (id) {
+        // let node = this.__getNodeById(id);
+        //
+        // if(node) {
+        //     node.collapsed = !node.collapsed;
+        //
+        //     let nodeDom = this.__getNodeDomById(id);
+        //
+        //     nodeDom.classList[node.collapsed ? "remove" : "add"]("collapsed");
+        // }
+
+        let promises = [];
+
+        this.selectingIdSet.forEach(id => {
+            promises.push(
+                new Promise((resolve, reject) => {
+                    try {
+
+                        let node = this.__getNodeById(id);
+
+                        if(node) {
+                            node.collapsed = !node.collapsed;
+
+                            let nodeDom = this.__getNodeDomById(id);
+
+                            nodeDom.classList[node.collapsed ? "remove" : "add"]("collapsed");
+                        }
+
+                        resolve(id);
+                    }catch (e) {
+                        reject(e);
+                    }
+                }).then(() => {
+                    this.selectingIdSet.delete(id);
+                })
+            );
+        });
+
+        return Promise.all(promises);
+    };
+
     return {
         create: options => {
             let tree;
@@ -767,6 +824,10 @@ const DraggableTree = (function () {
 
                 getMap: function () {
                     return tree.map
+                },
+
+                getNode: function (id) {
+                    return tree.map.get(id);
                 },
 
                 createNode: function(parentId = tree.topParent, node = {}) {
@@ -821,6 +882,17 @@ const DraggableTree = (function () {
                     return this;
                 },
 
+                toggleCollapse: function () {
+                    let selectedNodeIds = Array.from(tree.selectingIdSet.values());
+
+
+                    tree.toggleCollapse().then(() => {
+
+                    });
+
+                    return this;
+                },
+
                 render: function(rootList, map) {
                     tree.removeAll().then(() => {
                         tree.rootList = rootList instanceof Array ? rootList : [];
@@ -857,6 +929,10 @@ const DraggableTree = (function () {
             return Array.from(trees.values()).map(tree => {
                 return tree.operator;
             });
+        },
+
+        node: function () {
+            return new Node();
         }
     }
 }());

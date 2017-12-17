@@ -62,3 +62,7 @@
     background-color: transparent;
     border-bottom: none;
 }
+
+.layers .layer-box.collapsed .child-layers {
+    display: none;
+}
