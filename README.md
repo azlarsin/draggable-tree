@@ -2,11 +2,180 @@
 A draggable tree by pure javascript.
 
 ## How to use
+### use npm 
+#### 1. install
+```js
+npm install --save bezier-picker
+```
+
+#### 2. import & use
+```js
+// demo using React
+
+import DraggableTree from 'draggable-tree';
+
+class App extends React.Component {
+    constructor() {
+        super();
+
+        this.tree = null;
+
+        this.handleClick = this.handleClick.bind(this);
+    }
+
+    componentDidMount() {
+        let tree = DraggableTree.create({
+            map: new Map(),
+            list: [],
+            mountDom: ".layers",
+            multiSelect: true
+        });
+        tree.createNode(null, {
+            data: "<div>item 1</div>"
+        });
+        tree.createNode(tree.getRootList()[0], {
+            data: "<div>item 2</div>"
+        });
+        tree.createNode(tree.getRootList()[0], {
+            data: "<div>item 3</div>"
+        });
+        tree.createNode(tree.getRootList()[0], {
+            data: "<div>item 4</div>"
+        });
+        tree.createNode(tree.getRootList()[0], {
+            data: "<div>item 5</div>"
+        });
+        tree.createNode(null, {
+            data: "<div>item 6</div>"
+        });
+        tree.createNode(null, {
+            data: "<div>item 7</div>"
+        });
+
+        this.tree = tree;
+    }
+
+    handleClick(e) {
+        if(e.target === e.currentTarget) {
+            this.tree.clearSelected();
+        }
+    }
+
+    render() {
+		let { location } = this.props;
+
+		return (
+			<div style={{padding: '100px', backgroundColor: '#fff'}} onClick={ this.handleClick }>
+				<div className={ "layers" } onMouseDown={ e => { e.stopPropagation() }} />
+			</div>	
+        )
+    }
+}   
+```
+
+### directly using script tag
+```js
+<script src="../lib/DraggableTree.js"></script>
+<script>
+(function () {
+    // tree0
+    let tree = DraggableTree.create({
+        map: new Map(),
+        list: [],
+        mountDom: "#draggable-tree",
+
+        changed: function (actionType) {
+            console.log(actionType);
+            sessionStorage.setItem("draggable-tree-data", JSON.stringify({
+                rootList: tree.getRootList(),
+                map: Array.from(tree.getMap().entries())
+            }));
+        },
+        multiSelect: true
+    });
+    tree.createNode();
+    tree.createNode();
+    tree.createNode();
+
+    tree.createNode(tree.getRootList()[0]);
+    tree.createNode(tree.getMap().get(tree.getRootList()[0]).children[0], {
+        data: "<div class='test'>12345</div>"
+    });
+
+    // tree1
+    let treeStorageData = JSON.parse(sessionStorage.getItem("draggable-tree-data")) || {};
+    DraggableTree.create({
+        map: new Map(treeStorageData.map || []),
+        list: treeStorageData.rootList,
+        mountDom: "#draggable-tree-1",
+        // changed: 123,
+    });
+}());
+</script>
+```
+
 
 
 ## Api
+### init
+Prop                      | Type           | <div style="width: 400px;">Description</div>	|	Default
+:-------------------------|:--------------:|:----------------------------------------:|:-----------------
+map		|		[Map()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)	|	`key`: unique id <br>`value`: Node	|	`new Map()`
+list / rootList	| Array		|	**id list** of top parents of the tree(those node has no `parentId`)		|	`[]`
+mountDom	|	[`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) <br>or<br>query(selecting by [`querySelector`](https://developer.mozilla.org/en-US/docs/Web/API/Element/querySelector))	|	mounting dom	| -
+multiSelect	|	Boolean	|	enable multiple selecting	| false
 
+#### node (tree node)
+```js
+// node data struct
+{
+	// 
+	id: ${a unique id},
+	parentId: ${parentId},
+	children: ${children id list(Array)},
+	data: ${will render with innderHTML}
 
+	// ...
+	// you can set your own properties with createNode(parentId, nodeData)
+}
+```
+
+### functions
+Function		|	Arguments	| <div style="width: 300px;">Description</div>
+:-------------------------|:--------------:|:----------------------------------------
+
+### events
+#### useage
+```js
+trees].setEvents({
+    changed: function (actionType) {
+        console.log(actionType);
+        sessionStorage.setItem("draggable-tree-data", JSON.stringify({
+            rootList: tree.getRootList(),
+            map: Array.from(tree.getMap().entries())
+        }));
+
+        console.log(tree, tree.getRootList(), new Map(Array.from(tree.getMap().entries())));
+
+        // sync tree2
+        tree2.render(tree.getRootList(), new Map(Array.from(tree.getMap().entries())));
+    },
+    click: function () {
+        // console.log(arguments);
+    }
+});
+```
+
+Event		|	arguments	| <div style="width: 300px;">Description</div>
+:-------------------------|:--------------:|:----------------------------------------
+click	|	`nodeId` |	
+dragStart	|	|	
+dragOver	|	|	
+dragLeave	|	|	
+dragEnd	|	|	
+beforeDrop	|	|	
+drop	|	|	
+changed	|	|	
 
 ## Demo
 [https://blog.azlar.cc/demos/draggable-tree/](https://blog.azlar.cc/demos/draggable-tree/).
@@ -24,11 +193,12 @@ npm start
 - [x] 主逻辑、打包
 - [x] 事件逻辑，目前在考虑要不要支持多事件绑定(暂不支持)
 - [x] last holder 逻辑，会增添一些判断
+- [x] demo
+- [x] 发布到 npm
 - [ ] api (区分开 npm 与 script 引用)
 - [ ] readme
-- [x] demo(80%)
-- [x] 发布到 npm
 - [ ] 逻辑优化，给同事用后感觉有些 api 不完善；例如：drop 前没有 before drop 用于阻止 drop 操作带来的数据变化（有时候需要与后台交互，获得成功答复后才可继续操作）
+- [ ] 将 node 的必要属性切换为私有命名：`id => __id`, `data => __data`
 
 ## bug fixes
 - [x] firefox 不可拖拽

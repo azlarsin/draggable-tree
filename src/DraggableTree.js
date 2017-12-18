@@ -107,6 +107,7 @@ const DraggableTree = (function () {
         return layerBox;
     }
 
+/*
     function __checkOptions(options) {
         let passed = true,
             info = {
@@ -165,6 +166,8 @@ const DraggableTree = (function () {
 
         return passed;
     }
+*/
+
 
     // main
     function Tree(options) {
@@ -598,7 +601,8 @@ const DraggableTree = (function () {
             targetNode;
 
         if(this.map.has(nodeId)) {
-            consoleError(nodeId + "has been set");
+            consoleError(nodeId + " has been set");
+            return ;
         }
 
         parentId = parentId || this.topParent;
