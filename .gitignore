@@ -34,3 +34,5 @@ css/**/*.map
 
 */.idea/*
 .idea
+
+package-lock.json
