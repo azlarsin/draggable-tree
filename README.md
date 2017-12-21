@@ -118,12 +118,41 @@ class App extends React.Component {
 
 ## Api
 ### init
+use with:
+
+```js
+let options = {
+    map: new Map(),
+    list: [],
+    mountDom: "#draggable-tree",
+
+    changed: function (actionType) {
+        console.log(actionType);
+        sessionStorage.setItem("draggable-tree-data", JSON.stringify({
+            rootList: tree.getRootList(),
+            map: Array.from(tree.getMap().entries())
+        }));
+    },
+    multiSelect: true
+};
+
+let tree = DraggableTree.create(options);
+tree.createNode();
+tree.createNode();
+tree.createNode();
+```
+
+<hr>
+
+all options: 
+
 Prop                      | Type           | <div style="width: 400px;">Description</div>	|	Default
 :-------------------------|:--------------:|:----------------------------------------:|:-----------------
 map		|		[Map()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)	|	`key`: unique id <br>`value`: Node	|	`new Map()`
 list / rootList	| Array		|	**id list** of top parents of the tree(those node has no `parentId`)		|	`[]`
 mountDom	|	[`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) <br>or<br>query(selecting by [`querySelector`](https://developer.mozilla.org/en-US/docs/Web/API/Element/querySelector))	|	mounting dom	| -
 multiSelect	|	Boolean	|	enable multiple selecting	| false
+&events	| -		|	set event like: { ...options, click: function {} }	| -
 
 #### node (tree node)
 ```js
@@ -141,13 +170,105 @@ multiSelect	|	Boolean	|	enable multiple selecting	| false
 ```
 
 ### functions
+#### DraggableTree(Trees)
+use with:
+
+```js
+// create a tree
+let options = {
+    map: new Map(),
+    list: [],
+    mountDom: "#draggable-tree",
+
+    changed: function (actionType) {
+        console.log(actionType);
+        sessionStorage.setItem("draggable-tree-data", JSON.stringify({
+            rootList: tree.getRootList(),
+            map: Array.from(tree.getMap().entries())
+        }));
+    },
+    multiSelect: true
+};
+let tree = DraggableTree.create(options);
+
+// getTrees
+let trees = DraggableTree.getTrees();
+trees[0].rempoveAll();		// a Tree
+trees[1].createNode();
+
+```
+
+<hr>
+
+all events:
+
 Function		|	Arguments	| <div style="width: 300px;">Description</div>
 :-------------------------|:--------------:|:----------------------------------------
+create		| options		|	create a tree, return a Tree (Object)
+getTrees	| -				|	return
+
+
+#### Tree(created by DraggableTree.create())
+use with:
+
+```js
+let tree = DraggableTree.create({
+    map: new Map(),
+    list: [],
+    mountDom: "#draggable-tree",
+
+    changed: function (actionType) {
+        console.log(actionType);
+        sessionStorage.setItem("draggable-tree-data", JSON.stringify({
+            rootList: tree.getRootList(),
+            map: Array.from(tree.getMap().entries())
+        }));
+    },
+    multiSelect: true
+});
+tree.createNode();
+tree.createNode().createNode();
+```
+
+<hr>
+
+**all events return the Tree itself(except `getRootList()` & `getMap()` specifying the return value)**, events list:
+
+Function		|	Arguments	| <div style="width: 300px;">Description</div>
+:-------------------------|:--------------:|:----------------------------------------
+getRootList	| -		| get **id list** of top parents of the tree(those node has no `parentId`); **return `Array`**
+getMap			| -		| get all nodes map; **return `Map`**
+createNode	| parentId = tree.topParent, <br>node = {}	|	create a new Node, use parentId to create a child node; use node(`Object`) to define custom properties
+clearSelected	| -					| clear selected
+remove			| -					| remove **selected** node
+removeAll		| -					| remove all nodes(like clearing the tree)
+toggleMultiSelect	| -			| toggle multi-select option
+render			| list = [], map = new Map()	| re-render the tree by new **list & map**
+setEvents	| options = {}	|	an object contains events like: `{ click: function () {}, dragStart: function () {}, //... }`
+
 
 ### events
-#### useage
+use with:
+
 ```js
-trees].setEvents({
+// init
+let tree = DraggableTree.create({
+    map: new Map(),
+    list: [],
+    mountDom: "#draggable-tree",
+
+    changed: function (actionType) {
+        console.log(actionType);
+        sessionStorage.setItem("draggable-tree-data", JSON.stringify({
+            rootList: tree.getRootList(),
+            map: Array.from(tree.getMap().entries())
+        }));
+    },
+    multiSelect: true
+});
+
+// set event
+tree[0].setEvents({
     changed: function (actionType) {
         console.log(actionType);
         sessionStorage.setItem("draggable-tree-data", JSON.stringify({
