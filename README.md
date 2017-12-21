@@ -5,7 +5,7 @@ A draggable tree by pure javascript.
 ### use npm 
 #### 1. install
 ```js
-npm install --save bezier-picker
+npm install --save draggable-tree
 ```
 
 #### 2. import & use
@@ -75,6 +75,8 @@ class App extends React.Component {
 
 ### directly using script tag
 ```js
+// see examples/index.html
+
 <script src="../lib/DraggableTree.js"></script>
 <script>
 (function () {
@@ -117,6 +119,11 @@ class App extends React.Component {
 
 
 ## Api
+### important
+The **list(rootList)** is an **array** of nodeIds, the map is an **Map** with `{ id => node }`.
+
+Moving type only has two scene: drop in(will move node to target's children);move up(will move node before target).See `dropTargetType ` in **dragover** & **drop** events.
+
 ### init
 use with:
 
@@ -205,7 +212,7 @@ all events:
 Function		|	Arguments	| <div style="width: 300px;">Description</div>
 :-------------------------|:--------------:|:----------------------------------------
 create		| options		|	create a tree, return a Tree (Object)
-getTrees	| -				|	return
+getTrees	| -				|	return an array: [ Tree, Tree, Tree, //... ]
 
 
 #### Tree(created by DraggableTree.create())
@@ -232,7 +239,7 @@ tree.createNode().createNode();
 
 <hr>
 
-**all events return the Tree itself(except `getRootList()` & `getMap()` specifying the return value)**, events list:
+**All functions return the Tree itself(except `getRootList()` & `getMap()`, which specified the return value)**, functions list:
 
 Function		|	Arguments	| <div style="width: 300px;">Description</div>
 :-------------------------|:--------------:|:----------------------------------------
@@ -243,7 +250,7 @@ clearSelected	| -					| clear selected
 remove			| -					| remove **selected** node
 removeAll		| -					| remove all nodes(like clearing the tree)
 toggleMultiSelect	| -			| toggle multi-select option
-render			| list = [], map = new Map()	| re-render the tree by new **list & map**
+render			| list = [], map = new Map()	| **re-render the tree by new list & map**
 setEvents	| options = {}	|	an object contains events like: `{ click: function () {}, dragStart: function () {}, //... }`
 
 
@@ -286,17 +293,20 @@ tree[0].setEvents({
     }
 });
 ```
+<hr>
+
+events list:
 
 Event		|	arguments	| <div style="width: 300px;">Description</div>
 :-------------------------|:--------------:|:----------------------------------------
-click	|	`nodeId` |	
-dragStart	|	|	
-dragOver	|	|	
-dragLeave	|	|	
-dragEnd	|	|	
-beforeDrop	|	|	
-drop	|	|	
-changed	|	|	
+click	| `draggingNodeId ` | callback
+dragStart	| `event`, `draggingNodeId`	|	callback
+dragOver	| `event`, `draggingNodeId`, `doropTargetNodeId`, `dropTargetType`	|	callback, `dropTargetType` is a value of { in: 1, upon: 2 }
+dragLeave	| `event`, `draggingNodeId`	|	callback
+dragEnd	| `event`, `draggingNodeId`	|	callback
+beforeDrop	| `event`, `draggingNodeId`, `doropTargetNodeId`, **`dropTargetType`**	| before drop; **if return false, drop event will be interrupted**
+drop	| `event`, `draggingNodeId`, `doropTargetNodeId`, **`dropTargetType`**	|	callback
+changed	| `actionType`, 	|	callback
 
 ## Demo
 [https://blog.azlar.cc/demos/draggable-tree/](https://blog.azlar.cc/demos/draggable-tree/).
@@ -316,8 +326,8 @@ npm start
 - [x] last holder 逻辑，会增添一些判断
 - [x] demo
 - [x] 发布到 npm
-- [ ] api (区分开 npm 与 script 引用)
-- [ ] readme
+- [x] api (区分开 npm 与 script 引用)
+- [x] readme
 - [ ] 逻辑优化，给同事用后感觉有些 api 不完善；例如：drop 前没有 before drop 用于阻止 drop 操作带来的数据变化（有时候需要与后台交互，获得成功答复后才可继续操作）
 - [ ] 将 node 的必要属性切换为私有命名：`id => __id`, `data => __data`
 
