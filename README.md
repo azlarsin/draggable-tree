@@ -329,7 +329,8 @@ npm start
 - [x] api (区分开 npm 与 script 引用)
 - [x] readme
 - [ ] 逻辑优化，给同事用后感觉有些 api 不完善；例如：drop 前没有 before drop 用于阻止 drop 操作带来的数据变化（有时候需要与后台交互，获得成功答复后才可继续操作）
-- [ ] 将 node 的必要属性切换为私有命名：`id => __id`, `data => __data`
+- <del>[ ] 将 node 的必要属性切换为私有命名：`id => __id`, `data => __data`</del>
+- [ ] 将 node 修改为对象，使用 `new Node(options)` 来创建 node
 
 ## bug fixes
 - [x] firefox 不可拖拽
